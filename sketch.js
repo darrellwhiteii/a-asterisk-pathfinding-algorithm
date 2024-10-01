@@ -10,8 +10,10 @@ var end;
 var w, h;
 
 function Spot(i, j) {
-  this.x = i;
-  this.y = j;
+  this.i = i;
+  this.j = j;
+
+  this.neighbors = [];
 
   this.f = 0;
   this.g = 0;
@@ -20,13 +22,31 @@ function Spot(i, j) {
   this.show = function (col) {
     fill(col);
     noStroke();
-    rect(this.x * w, this.y * h, w - 1, h - 1);
+    rect(this.i * w, this.j * h, w - 1, h - 1);
+  };
+
+  this.addNeighbors = function (grid) {
+    var i = this.i;
+    var j = this.j;
+
+    if (i < cols - 1) {
+      this.neighbors.push(grid[i + 1][j]);
+    }
+    if (i > 0) {
+      this.neighbors.push(grid[i - 1][j]);
+    }
+    if (j < rows - 1) {
+      this.neighbors.push(grid[i][j + 1]);
+    }
+    if (j > 0) {
+      this.neighbors.push(grid[i][j - 1]);
+    }
   };
 }
 
 function setup() {
   createCanvas(400, 400);
-  console.log("A*");
+  console.log('A*');
 
   w = width / cols;
   h = height / rows;
@@ -38,6 +58,12 @@ function setup() {
   for (var i = 0; i < cols; i++) {
     for (var j = 0; j < rows; j++) {
       grid[i][j] = new Spot(i, j);
+    }
+  }
+
+  for (var i = 0; i < cols; i++) {
+    for (var j = 0; j < rows; j++) {
+      grid[i][j].addNeighbors(grid);
     }
   }
 
@@ -67,12 +93,32 @@ function draw() {
     removeFromArray(openSet, current);
     closedSet.push(current);
 
+    var neighbors = current.neighbors;
+    for (var i = 0; i < neighbors.length; i++) {
+      var neighbor = neighbors[i];
+
+      if (!closedSet.includes(neighbor)) {
+        var tempG = current.g + 1;
+        if (openSet.includes(neighbor)) {
+          if (tempG < neighbor.g) {
+            neighbor.g = tempG;
+          }
+        } else {
+          neighbor.g = tempG;
+          openSet.push(neighbor);
+        }
+
+        neighbor.h = heuristic(neighbor, end);
+        neighbor.f = neighbor.g + neighbor.h;
+      }
+    }
+
     //we can keep going
   } else {
     //no solution
   }
 
-  background(0);
+background(0); 
 
   for (var i = 0; i < cols; i++) {
     for (var j = 0; j < rows; j++) {
@@ -95,4 +141,9 @@ function removeFromArray(arr, elt) {
       arr.splice(i, 1);
     }
   }
+}
+
+function heuristic(a, b) {
+  var d = dist(a.i, a.j, b.i, b.j);
+  return d;
 }
