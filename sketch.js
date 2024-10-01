@@ -1,5 +1,5 @@
-var cols = 5;
-var rows = 5;
+var cols = 25;
+var rows = 25;
 var grid = new Array(cols);
 
 var openSet = [];
@@ -8,12 +8,14 @@ var start;
 var end;
 
 var w, h;
+var path = [];
 
 function Spot(i, j) {
   this.i = i;
   this.j = j;
 
   this.neighbors = [];
+  this.previous = undefined;
 
   this.f = 0;
   this.g = 0;
@@ -46,7 +48,7 @@ function Spot(i, j) {
 
 function setup() {
   createCanvas(400, 400);
-  console.log('A*');
+  console.log("A*");
 
   w = width / cols;
   h = height / rows;
@@ -87,6 +89,16 @@ function draw() {
     var current = openSet[winner];
 
     if (current === end) {
+      // find the path!
+      path = [];
+      var temp = current;
+      path.push(temp);
+      while (temp.previous) {
+        path.push(temp.previous);
+        temp = temp.previous;
+      }
+
+      noLoop();
       console.log("Done!");
     }
 
@@ -110,6 +122,7 @@ function draw() {
 
         neighbor.h = heuristic(neighbor, end);
         neighbor.f = neighbor.g + neighbor.h;
+        neighbor.previous = current;
       }
     }
 
@@ -118,7 +131,7 @@ function draw() {
     //no solution
   }
 
-background(0); 
+  background(0);
 
   for (var i = 0; i < cols; i++) {
     for (var j = 0; j < rows; j++) {
@@ -133,6 +146,20 @@ background(0);
   for (var i = 0; i < openSet.length; i++) {
     openSet[i].show(color(0, 255, 0));
   }
+
+  for (var i = 0; i < path.length; i++) {
+    path[i].show(color(0, 0, 255));
+  }
+
+  //evaluating the line position every move instead of once
+
+  path = [];
+  var temp = current;
+  path.push(temp);
+  while (temp.previous) {
+    path.push(temp.previous);
+    temp = temp.previous;
+  }
 }
 
 function removeFromArray(arr, elt) {
@@ -144,6 +171,9 @@ function removeFromArray(arr, elt) {
 }
 
 function heuristic(a, b) {
-  var d = dist(a.i, a.j, b.i, b.j);
+  //var d = dist(a.i, a.j, b.i, b.j);
+
+  var d = abs(a.i - b.i) + abs(a.j - b.j);
+
   return d;
 }
